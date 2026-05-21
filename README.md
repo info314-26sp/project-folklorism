@@ -2,6 +2,32 @@
 
 ## Message Reference
 
+#### GAME_START
+This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
+
+Fields: 
+- game_id: string (ID's game session)
+- player_id: string (ID's player in session)
+- ready: boolean (needs to be true and false is ERROR)
+
+Response: 
+- Server: ACK
+- when GAME_CONFIRM and DECK_READY are recieved, Server will get DEAL_CARDS
+
+Side Effects:
+- Server marks Player as READY
+- Game doesn't proceed to deal until Player and Dealer confirms
+
+Example: 
+```
+{
+  "type": "GAME_START",
+  "game_id": "game-7f3a91c2",
+  "player_id": "player-42b",
+  "timestamp": "2026-04-10T14:00:00Z"
+}
+```
+
 #### GAME_CONFIRM
 This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
 The game start is sent by the server to the Player and Dealer, which initates a new session/game.
@@ -19,28 +45,22 @@ Side Effects:
 - server initializes game state
 - hands need to be empty to start
 
-#### GAME_CONFIRM
-This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
-
-Fields: 
-- game_id: string (ID's game session)
-- player_id: string (ID's player in session)
-- ready: boolean (needs to be true and false is ERROR)
-
-Response: 
-- Server: ACK
-- when GAME_CONFIRM and DECK_READY are recieved, Server will get DEAL_CARDS
-
-Side Effects:
-- Server marks Player as READY
-- Game doesn't proceed to deal until Player and Dealer confirms
-
+Example: 
+```
+{
+  "type": "GAME_CONFIRM",
+  "game_id": "game-7f3a91c2",
+  "player_id": "player-42b",
+  "ready": true
+}
+```
 #### HAND_UPDATE_PLAYER
 Delivers current hand state of Player, omit hidden dealer cards
 Fields: 
 - game_id: string (ID's game session)
 - score: int (best score for visible cards only)
 - owner: string (player or dealer with updates describes)
+  
 Response: 
 - Server: ACK
 
@@ -48,6 +68,15 @@ Side Effects:
 - Player updates the local display
 - Server logs player is notified
 
+Example:
+```
+{
+  "type": "HAND_UPDATE_PLAYER",
+  "game_id": "game-7f3a91c2",
+  "owner": "dealer",
+  "score": 9
+}
+```
 ### Player_Action
 Description: Player chooses Hit | Stand | Split
 Sender: Player
