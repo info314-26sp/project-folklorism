@@ -1,6 +1,53 @@
 # Blackjack
 
 ## Message Reference
+
+#### GAME_CONFIRM
+This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
+The game start is sent by the server to the Player and Dealer, which initates a new session/game.
+
+Fields: 
+- game_id: string (game session ID from GAME_START)
+- player_id: string (player ID to verify ID)
+- timestamp: string (server time when game starts)
+
+Response: 
+- Player: GAME_CONFIRM
+- Dealer: DECK_READY
+
+Side Effects:
+- server initializes game state
+- hands need to be empty to start
+
+#### GAME_CONFIRM
+This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
+
+Fields: 
+- game_id: string (ID's game session)
+- player_id: string (ID's player in session)
+- ready: boolean (needs to be true and false is ERROR)
+
+Response: 
+- Server: ACK
+- when GAME_CONFIRM and DECK_READY are recieved, Server will get DEAL_CARDS
+
+Side Effects:
+- Server marks Player as READY
+- Game doesn't proceed to deal until Player and Dealer confirms
+
+#### HAND_UPDATE_PLAYER
+Delivers current hand state of Player, omit hidden dealer cards
+Fields: 
+- game_id: string (ID's game session)
+- score: int (best score for visible cards only)
+- owner: string (player or dealer with updates describes)
+Response: 
+- Server: ACK
+
+Side Effects:
+- Player updates the local display
+- Server logs player is notified
+
 ### Player_Action
 Description: Player chooses Hit | Stand | Split
 Sender: Player
