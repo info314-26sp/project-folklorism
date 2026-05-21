@@ -24,7 +24,9 @@ Example:
   "type": "GAME_START",
   "game_id": "game-7f3a91c2",
   "player_id": "player-42b",
-  "timestamp": "2026-04-10T14:00:00Z"
+  "timestamp": "2026-04-10T14:00:00Z",
+  "deck_count": 1,
+  "status": "ACTIVE"
 }
 ```
 
@@ -51,7 +53,9 @@ Example:
   "type": "GAME_CONFIRM",
   "game_id": "game-7f3a91c2",
   "player_id": "player-42b",
-  "ready": true
+  "ready": true,
+  "timestamp": "2026-04-10T14:00:05Z",
+  "status": "READY"
 }
 ```
 #### HAND_UPDATE_PLAYER
@@ -74,7 +78,9 @@ Example:
   "type": "HAND_UPDATE_PLAYER",
   "game_id": "game-7f3a91c2",
   "owner": "dealer",
-  "score": 9
+  "score": 9,
+  "hole_card_hidden": true,
+  "hand_index": 0
 }
 ```
 ### Player_Action
