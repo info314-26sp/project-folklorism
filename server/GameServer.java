@@ -29,12 +29,12 @@ class GameServer {
   }
 
   public synchronized void setPlayer(ClientHandler player) {
-    System.out.println("player set");
+    System.out.println("player joined");
     this.player = player;
   }
 
   public synchronized void setDealer(ClientHandler dealer) {
-    System.out.println("dealer set");
+    System.out.println("dealer joined");
     this.dealer = dealer;
   }
 

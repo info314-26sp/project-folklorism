@@ -22,12 +22,12 @@ public class ClientHandler implements Runnable {
       this.in = in;
 
       // dummy way of setting player / dealer
-       if (server.getPlayer() == null) {
-        server.setPlayer(this);
-        out.println("player");
-      } else if (server.getDealer() == null) {
+      if (server.getDealer() == null) {
         server.setDealer(this);
-        out.println("dealer");
+        // out.println("dealer");
+      } else if (server.getPlayer() == null) {
+        server.setPlayer(this);
+        // out.println("player");
       }
 
       // separate logic handlers
