@@ -61,11 +61,24 @@ class GameServer {
   }
 
   public void handleDealerCard(String target, String card) {
+    String message = "{\n"
+      + "  \"type\": \"DEALER_CARD\",\n"
+      + "  \"msg_id\": \"104\",\n"
+      + "  \"sender\": \"DEALER\",\n"
+      + "  \"payload\": {\n"
+      + "    \"target\": \"" + target + "\",\n"
+      + "    \"card\": \"" + card + "\",\n"
+      + "    \"new_total\": 20,\n"
+      + "    \"is_bust\": false,\n"
+      + "    \"is_blackjack\": false\n"
+      + "  }\n"
+      + "}";
+
     switch (target) {
       case "PLAYER":
         System.out.println("player: drew " + card);
         // TODO calculate total and if bust or blackjack send to player
-        // player.sendMessage("");
+        player.sendMessage(message);
         break;
       case "DEALER":
         break;
