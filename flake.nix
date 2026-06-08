@@ -18,6 +18,13 @@
       }
     );
   in {
+    packages = eachSystem (system: {
+      default = self.packages.${system}.server;
+      server = pkgsFor.${system}.callPackage ./nix/server.nix { };
+      player = pkgsFor.${system}.callPackage ./nix/player.nix { };
+      dealer = pkgsFor.${system}.callPackage ./nix/dealer.nix { };
+    });
+
     devShells = eachSystem (system: {
       default = pkgsFor.${system}.mkShell {
         packages = builtins.attrValues {
