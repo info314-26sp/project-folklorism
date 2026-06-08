@@ -1,5 +1,6 @@
 package Card_And_Message_Stuff;
 import java.io.Serializable;
+
 public class Message implements Serializable {
     private final MessageType type;
     private final String sender;
@@ -16,12 +17,15 @@ public class Message implements Serializable {
     public MessageType getType() {
         return type;
     }
+
     public String getSender() {
         return sender;
     }
+
     public String getReceiver() {
         return receiver;
     }
+
     public String getContent() {
         return content;
     }

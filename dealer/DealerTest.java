@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 import java.net.Socket;
-import java.util.Random;
+
 import Card_And_Message_Stuff.*;
 
 class DealerTest {
@@ -9,75 +9,142 @@ class DealerTest {
   private static final int PORT = 2121;
   private PrintWriter out;
   private BufferedReader in;
-
+  private BlackJackRound round = new BlackJackRound();
   public DealerTest() {
     try (
       Socket socket = new Socket(HOST, PORT);
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    ) {
+    ) 
+    {
       this.out = out;
       this.in = in;
 
+      out.println("{\"type\":\"CONNECT\",\"sender\":\"DEALER\"}");
       System.out.println("dealer connected to server " + HOST + ":" + PORT);
 
       while (true) {
         handleConnection();
       }
-      // socket.close();
-    } catch (IOException e) {
+    } 
+    catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
   private void handleConnection() throws IOException {
-    String[] message = readMessage();
+    String message = readMessage();
+    if (message == null) return;
 
-    String type = message[1].split("\"")[3];
-
-    // handle action
-    switch (type) {
-      case "PLAYER_ACTION":
-        handleHit();
-        break;
-      default:
+    if (message.contains("\"START_ROUND\"")) {
+        startRound();
+    } else if (message.contains("\"PLAYER_HIT\"")) {
+        handlePlayerHit();
+    } else if (message.contains("\"PLAYER_STAND\"")) {
+        handlePlayerStand();
+    } else if (message.contains("\"PLAYER_SPLIT\"")) {
+        handlePlayerSplit();
+    } else if (message.contains("\"DEALER_TURN\"")) {
+        handleDealerTurn();
     }
   }
 
-  private void handleHit() throws IOException {
-    Random random = new Random();
+  private void startRound() {
+    round = new BlackJackRound();
+    round.startRound();
 
-    Rank[] ranks = Rank.values();
-    Suit[] suits = Suit.values();
-    Rank rank = ranks[random.nextInt(ranks.length)];
-    Suit suit = suits[random.nextInt(suits.length)];
-
-    Card card = new Card(rank, suit);
-
-    String response = "{\n" +
-            "  \"type\": \"DEALER_CARD\",\n" +
-            "  \"msg_id\": \"104\",\n" +
-            "  \"sender\": \"DEALER\",\n" +
-            "  \"payload\": {\n" +
-            "    \"target\": \"PLAYER\",\n" +
-            "    \"card\": \"" + card.toString() + "\"\n" +
-            "  }\n" +
-            "}";
-
-    System.out.println("drew " + card.toString());
-    out.println(response);
+    send("{\"typre:DEALER_UPCARD\",\"sender\":\"DEALER\",\"payload\":{\"card\":\"" + round.getDealerHand().getCard(0).toString() + "\"}}");
+    send("{\"type\":\"PLAYER_INITIAL\",\"sender\":\"DEALER\",\"payload\":{"
+                + "\"card1\":\"" + round.getCurrentPlayerHand().getCard(0).toString() + "\","
+                + "\"card2\":\"" + round.getCurrentPlayerHand().getCard(1).toString() + "\","
+                + "\"total\":\"" + round.getCurrentPlayerHand().getValue() + "\","
+                + "\"blackjack\":\"" + round.getCurrentPlayerHand().isBlackjack() + "\""
+                + "}}");
   }
 
-  private String[] readMessage() throws IOException {
-    List<String> message = new ArrayList<String>();
-    String line;
+  private void handlePlayerHit(){
+    Card card = round.playerHit();
+    Hand hand = round.getCurrentPlayerHand();
 
-    // stop reading at closing '}' line
-    while ((line = in.readLine()) != null && !line.equals("}")) {
-      message.add(line);
+    System.out.println("Player hits and receives: " + card);
+
+    send("{\"type\":\"PLAYER_HIT_CARD\",\"sender\":\"DEALER\",\"payload\":{"
+                + "\"card\":\"" + card.toString() + "\","
+                + "\"total\":\"" + hand.getValue() + "\","
+                + "\"bust\":\"" + hand.isBust() + "\","
+                + "\"blackjack\":\"" + hand.isBlackjack() + "\""
+                + "}}");
+    if (hand.isBust()) {
+      send("{\"type\":\"PLAYER_BUST\",\"sender\":\"DEALER\",\"payload\":{"
+              + "\"total\":\"" + hand.getValue() + "\""
+              + "}}");
     }
-    message.add("}");
+  }
 
-    return message.toArray(new String[0]);
+  private void handlePlayerStand() {
+    System.out.println("Player stands with total: " + round.getCurrentPlayerHand().getValue());
+    send("{\"type\":\"PLAYER_STAND\",\"sender\":\"DEALER\"}");
+  }
+
+  private void handlePlayerSplit() {
+    if (round.canSplit()) {
+        round.split();
+        send("{\"type\":\"PLAYER_INITIAL\",\"sender\":\"DEALER\",\"payload\":{"
+                + "\"hand_count\":\"2\","
+                + "\"hand1_total\":\"" + round.getPlayerHands().get(0).getValue() + "\","
+                + "\"hand2_total\":\"" + round.getPlayerHands().get(1).getValue() + "\""
+                + "}}");
+    } else {
+        send("{\"type\":\"PLAYER_INITIAL\",\"sender\":\"DEALER\",\"payload\":{"
+                + "\"error\":\"SPLIT_NOT_ALLOWED\""
+                + "}}");
+      }
+  }
+
+  private void handleDealerTurn() {
+    send("{\"type\":\"DEALER_REVEAL\",\"sender\":\"DEALER\",\"payload\":{"
+            + "\"card1\":\"" + round.getDealerHand().getCard(0).toString() + "\","
+            + "\"card2\":\"" + round.getDealerHand().getCard(1).toString() + "\","
+            + "\"total\":\"" + round.getDealerHand().getValue() + "\""
+            + "}}");
+    
+    while(round.dealerShouldHit()) {
+      Card card = round.dealerHit();
+      System.out.println("Dealer hits and receives: " + card);
+      send("{\"type\":\"DEALER_HIT_CARD\",\"sender\":\"DEALER\",\"payload\":{"
+                + "\"card\":\"" + card.toString() + "\","
+                + "\"total\":\"" + round.getDealerHand().getValue() + "\","
+                + "\"bust\":\"" + round.getDealerHand().isBust() + "\""
+                + "}}");
+    }
+
+    if (round.getDealerHand().isBust()) {
+      send("{\"type\":\"DEALER_BUST\",\"sender\":\"DEALER\",\"payload\":{"
+              + "\"total\":\"" + round.getDealerHand().getValue() + "\""
+              + "}}");
+    } else {
+      send("{\"type\":\"ROUND_END\",\"sender\":\"DEALER\",\"payload\":{"
+              + "\"dealer_total\":\"" + round.getDealerHand().getValue() + "\""
+              + "}}");
+    }
+  }
+
+
+  private void send(String response) {
+        out.println(response);
+  }
+
+  private String readMessage() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String line;
+
+        while ((line = in.readLine()) != null) {
+            sb.append(line);
+            if (line.contains("}")) break;
+        }
+
+        if (sb.length() == 0) return null;
+        return sb.toString();
   }
 
   public static void main(String[] args) {

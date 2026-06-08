@@ -1,10 +1,18 @@
 package Card_And_Message_Stuff;
 
 public enum MessageType {
-    Connect,
-    Request_Card,
-    Deal_Card,
-    Card_Granted,
-    Score_Update,
-    Disconnect
+    CONNECT,
+    START_ROUND,
+    PLAYER_ACTION,
+    PLAYER_HIT,
+    PLAYER_STAND,
+    PLAYER_SPLIT,
+    DEALER_UPCARD,
+    PLAYER_INITIAL,
+    PLAYER_HIT_CARD,
+    DEALER_REVEAL,
+    DEALER_HIT_CARD,
+    PLAYER_BUST,
+    DEALER_BUST,
+    ROUND_END
 }
