@@ -24,7 +24,7 @@ stdenv.mkDerivation {
     root = ../.;
     fileset = fs.unions [
       ../dealer
-      ../Card_And_Message_Stuff
+      ../common
     ];
   };
 
@@ -37,9 +37,10 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    javac --source-path . dealer/DealerTest.java
-    mv dealer/DealerTest.class .
-    jar cf dealer.jar DealerTest.class Card_And_Message_Stuff/*.class
+    mv dealer/* .
+    mv common/* .
+    javac --source-path . DealerTest.java
+    jar cf dealer.jar DealerTest.class Deck/*.class
 
     runHook postBuild
   '';

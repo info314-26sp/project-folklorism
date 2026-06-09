@@ -2,224 +2,253 @@
 
 ## Message Reference
 
-#### GAME_START
-This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
+Messages between nodes take the form of a newline separated plaintext strings.
 
-Fields: 
-- game_id: string (ID's game session)
-- player_id: string (ID's player in session)
-- ready: boolean (needs to be true and false is ERROR)
+The first line contains a 3 letter `REQ`/`RES` indicator distinguishing requests versus responses, followed by a 4 letter action as described below.
 
-Response: 
-- Server: ACK
-- when GAME_CONFIRM and DECK_READY are recieved, Server will get DEAL_CARDS
+Optionally, the message can contain information in the body on following new lines as specified for each action.
 
-Side Effects:
-- Server marks Player as READY
-- Game doesn't proceed to deal until Player and Dealer confirms
+### ASRO - Assign Role
 
-Example: 
+Used to assign a client to a game role. The client sends a request to the server, which then attempts to give it the requested role and responds with success or failure.
+
+#### Fields
+
+- String role (`"player"`|`"dealer"`)
+
+#### Responses
+
+- Success:
+  ```
+  RES ASRO
+  success
+  {role}
+  ```
+- Failure:
+  ```
+  RES ASRO
+  failure
+  {reason}
+  ```
+
+#### Side Effects
+
+- Server assigns the client to a role
+- Server checks if roles are filled and game is ready to play
+
+#### Example
+
 ```
-{
-  "type": "GAME_START",
-  "game_id": "game-7f3a91c2",
-  "player_id": "player-42b",
-  "timestamp": "2026-04-10T14:00:00Z",
-  "deck_count": 1,
-  "status": "ACTIVE"
-}
-```
-
-#### GAME_CONFIRM
-This is sent by the Player that confirms GAME_START and signals readiness that begins the play.
-The game start is sent by the server to the Player and Dealer, which initates a new session/game.
-
-Fields: 
-- game_id: string (game session ID from GAME_START)
-- player_id: string (player ID to verify ID)
-- timestamp: string (server time when game starts)
-
-Response: 
-- Player: GAME_CONFIRM
-- Dealer: DECK_READY
-
-Side Effects:
-- server initializes game state
-- hands need to be empty to start
-
-Example: 
-```
-{
-  "type": "GAME_CONFIRM",
-  "game_id": "game-7f3a91c2",
-  "player_id": "player-42b",
-  "ready": true,
-  "timestamp": "2026-04-10T14:00:05Z",
-  "status": "READY"
-}
-```
-#### HAND_UPDATE_PLAYER
-Delivers current hand state of Player, omit hidden dealer cards
-Fields: 
-- game_id: string (ID's game session)
-- score: int (best score for visible cards only)
-- owner: string (player or dealer with updates describes)
-  
-Response: 
-- Server: ACK
-
-Side Effects:
-- Player updates the local display
-- Server logs player is notified
-
-Example:
-```
-{
-  "type": "HAND_UPDATE_PLAYER",
-  "game_id": "game-7f3a91c2",
-  "owner": "dealer",
-  "score": 9,
-  "hole_card_hidden": true,
-  "hand_index": 0
-}
-```
-### Player_Action
-Description: Player chooses Hit | Stand | Split
-Sender: Player
-Fields:
-Required:
-  action (“Hit | Stand | Split”)
-Optional
-  hand_id()
-Expected response:
-  If Hit: Server - Dealers_Card
-  If Stand: Server - Dealer - Dealers_Card | Game_Result
-  If Split: Server - Dealer - new cards
-Side effect:
-  Server validates action and updates game state. 
-Example:
-```
-{
-  "type": "PLAYER_ACTION",
-  "msg_id": "103",
-  "sender": "PLAYER",
-  "payload": {
-     "action": "HIT"
-  }
-}
+REQ ASRO
+player
 ```
 
-### Dealers_Card
-Description: Dealer provides a new card to either themselves or the player
-Sender: Dealer
-Fields:
-Required:
-  target(“Dealer | Player”)
-  card(“String”)
-  new_total(“int”)
-  is_bust(“true | false”)
-  is_ blackjack(“true | false”)
-Expected response:
-  If target = Player: Server - Updating_Hand_To_Player
-	  If Bust | Blackjack: Server - Game_Result’
-	  Else: Server - Player_Action
-	
-  If target = Dealer: Server - Game_Result
-Side effect:
-  Servers updates totals 
-Example:
+### GMST - Game Start
+
+Once both clients have joined, the server sends a message to both clients letting them know it is now okay to start the game.
+
+#### Response
+
 ```
-{
-  "type": "DEALER_CARD",
-  "msg_id": "104",
-  "sender": "DEALER",
-  "payload": {
-    "target": "PLAYER",
-    "card": "5S",
-    "new_total": 20,
-    "is_bust": false,
-    "is_blackjack": false
-  }
-}
-```
-### Error
-Description: In case of invalid arguments, 
-Sender: Any
-Fields:
-Required:
-  msg_id()
-  error_code(4xx | 5xx)
-  error_mgs()
-Expected response:
-  None
-Side effect:
-  Prevents violations
-```
-Example:
-{
-  "type": "ERROR",
-  "msg_id": "105",
-  "sender": "GAME_SERVER",
-  "payload": {
-    "original_msg_id": "103",
-    "error_code": "ILLEGAL_ACTION",
-    “error_message": "Cannot HIT after bust."
-  }
-}
+RES GMST
 ```
 
-### Timeout
+#### Side Effects
+- Clients will stop waiting begin their game loop
 
-This message represents a timeout, and can be sent by any component following a message that expects a response, but has not been given one within a designated time period. The timed-out message is repeated within the timeout message following the other fields.
+#### Example
 
-Fields:
-- timeout-count: int
-- message: Message
-
-Expected Response:
-- inherited from contained message
-
-Side effects:
-- Previous instances of timed-out message are ignored in favor of most recent
-
-Example:
-```json
-{
-  "type": "TIMEOUT",
-  "msg_id": "106",
-  "sender": "PLAYER",
-  "payload": {
-    "timeout-count": 3,
-    "message": {
-      "type": "PLAYER_ACTION",
-      "msg_id": "103",
-      "sender": "PLAYER",
-      "payload": {
-        "action": "HIT"
-      }
-    }
-  }
-}
+```
+REQ GMST
 ```
 
-### Final
+### PLAC - Player Action
 
-This message is sent from the server to the dealer and player clients, signaling the end of the game, and indicating the winner.
+Represents the action a player takes on their turn. Sent by the player to the server.
 
-Fields:
-- winner: string ("PLAYER" | "DEALER")
+#### Fields
 
-Side effects:
-- The game is concluded and the connection is closed
+- String action (`"hit"`|`"stand"`)
+- (response) String card (`"{rank}-{suit}"`)
+- (response) optional - String event (`"blackjack"`|`"bust"`)
 
-Example:
-```json
-{
-  "type": "FINAL",
-  "msg_id": "107",
-  "sender": "GAME_SERVER",
-  "payload": {
-    "winner": "PLAYER"
-  }
-}
+#### Response
+
+- Hit
+  ```
+  RES PLAC
+  {card}
+  {event?}
+  ```
+- Stand
+  ```
+  RES PLAC
+  stand
+  ```
+
+#### Side Effects
+
+- Hit
+  - The server requests the dealer to deal a card for the player
+  - If the card results in a blackjack or bust don't prompt the player for action and instead wait for the gameover message
+- Stand
+  - Stop prompting the player for action and reveal the dealer's hidden card
+  - Initiate the dealer's turn
+
+#### Example
+
+```
+REQ PLAC
+hit
+```
+
+### DRCD - Draw Card
+
+Represents the dealer dealing themselves a card, i.e. for the initial two cards dealt, or during the dealer's turn once the player turn has ended.
+
+#### Fields
+
+- (response) String card (`"{rank}-{suit}"`)
+
+#### Response
+
+```
+RES DRCD
+{card}
+```
+
+#### Side Effects
+
+- The server requests the dealer to deal a card for themselves
+
+#### Example
+
+```
+REQ DRCD
+```
+
+### DLCD - Deal Card
+
+Represents a request to the dealer to be dealt a card. Can be sent by the server to the dealer on behalf of the player when they 'hit' or on behalf of the dealer when they deal themselves a card to keep track of their hand.
+
+#### Fields
+
+- String recipient (`"player"`|`"dealer"`)
+- (response) String card (`"{rank}-{suit}"`)
+
+#### Response
+
+```
+RES DLCD
+{recipient}
+{card}
+```
+
+#### Side Effects
+
+- The dealer deals a random card from the deck
+- The server checks whether the card causes a blackjack or bust before passing it to the recipient
+
+#### Example
+
+```
+REQ DLCD
+player
+```
+
+### DLHD - Dealer Hand
+
+Sent from the player to the server to view the dealer's current hand
+
+#### Fields
+
+- (response) String card (`"{rank}-{suit}"`)
+
+#### Response
+
+```
+RES DLHD
+{card}
+```
+
+#### Side Effects
+
+- Player is displayed with the dealer's current hand, minus the hole card if it is still the player's turn
+
+#### Example
+
+```
+REQ DLHD
+```
+
+### DLTN - Dealer Turn
+
+Sent by the server to both clients once the player stands to indicate it is now the dealer's turn
+
+#### Fields
+
+- int dealerScore
+
+#### Side Effects
+
+- Dealer
+  - Will hit until thier score is at least 17
+- Player
+  - Will stop prompting for action input and instead fetch dealer hand
+
+#### Example
+
+```
+REQ DLTN
+13
+```
+
+### DLFI - Dealer Finished
+
+Indicates that the dealer is finished performing additional hits on their turn. Sent by the dealer to the server to inform server, and also by the server to the player so the player knows to stop waiting.
+
+#### Response
+
+```
+RES DLFI
+```
+
+#### Side Effects
+
+- Server
+  - Sends DLFI request to player
+  - Initiates final comparison of scores
+- Player
+  - Fetches and displays final dealer hand
+
+#### Example
+
+```
+REQ DLFI
+```
+
+### GMFI - Game Final
+
+Sent by the server to indicate that the game has ended
+
+#### Fields
+
+- String winner (`"player"`|`"dealer"`)
+
+#### Response
+
+```
+RES GMFI
+```
+
+#### Side Effects
+
+- Clients will end their game loop, close their connection, and exit
+- The server will end its game loop and exit
+
+#### Example
+
+```
+REQ GMFI
+player
 ```

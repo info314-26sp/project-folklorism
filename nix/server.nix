@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   stdenv,
   ...
@@ -11,13 +12,21 @@ let
       "java.base"
     ];
   };
+
+  fs = lib.fileset;
 in
 
 stdenv.mkDerivation {
   pname = "blackjack-server";
   version = "0.0.0";
 
-  src = ../server;
+  src = fs.toSource {
+    root = ../.;
+    fileset = fs.unions [
+      ../server
+      ../common
+    ];
+  };
 
   nativeBuildInputs = [
     jdk
@@ -28,8 +37,11 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
+    mv server/* .
+    mv common/* .
+
     javac --source-path . GameServer.java
-    jar cf server.jar GameServer.class ClientHandler.class
+    jar cf server.jar *.class **/*.class
 
     runHook postBuild
   '';
