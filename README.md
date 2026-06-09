@@ -302,3 +302,31 @@ RES GMFI
 REQ GMFI
 player
 ```
+
+## Testing
+
+While implementing this system, we went through multipple different iterations. With every new step we saw available paths to make the communication protocol, the communication between the components and the logic itself a lot simpler. 
+
+Therefore testing was very important starting with the components themselves:
+- Dealer logic tests: deck initialization, shuffling, card uniqueness, hit/stand rules, dealer bust logic, Ace soft/hard handling.
+- Player logic tests — hand evaluation, Ace logic, decision logic (hit/stand).
+- Server state tests — game state transitions, turn ordering, win/loss evaluation, message routing logic.
+
+The protocol also went through different testing to accunt for:
+- Message format validation 
+- Invalid message handling 
+- Oredering gurantees (the game flow)
+
+We also needed to test each pair individually, mainly for debugging pourposes:
+- Player <-> Server: Player registration, action forwarding, result delivery
+- Dealer <-> Server: Dealer registration, card request, deck managment.
+
+Of course we also had to do Full System Tests:
+- Start‑to‑finish game tests — START → initial deal → HIT/ STAND → dealer turn → RESULT.
+- Multiple rounds tests — ensure state resets correctly.
+
+To check the user experience from the teminal, we also tested for:
+- Readable output tests — Player sees cards, totals, and results clearly.
+- Error message clarity tests — TIMEOUT, INVALID_ACTION, DEALER_DISCONNECTED.
+
+For overall integrity and to keep track of the game, a debug mode was included that logs everything in case future problems arise.
