@@ -330,3 +330,14 @@ To check the user experience from the teminal, we also tested for:
 - Error message clarity tests — TIMEOUT, INVALID_ACTION, DEALER_DISCONNECTED.
 
 For overall integrity and to keep track of the game, a debug mode was included that logs everything in case future problems arise.
+
+
+## Changes Since Proposal
+
+Since the original topic proposal and protocol prototyping, there have been a lot of changes to the details of the protocol as thing started to be implemented.
+
+First, we made the decision to switch from a json like format to a cleaner and simpler format more similar to http, with a main line determining specific actions and details in the following lines. Message names were also shortend to 4 characters so line length was more standardized (nicer to look at!) and also much nicer to write out than json.
+
+We also made a lot of changes in which messages are included in the protocol, dropping some, such as `GAME_CONFIRM`, which became redundant when we adopted a `REQ`/`RES` based header line, which allowed the game start message to act as both intiation and confirmation.
+
+Balancing this out, lots of message types were added as we discovered the need for them, mainly interacting with the dealer and the game lifecycle to trigger events. These include dealer hand, dealer turn, and dealer finished.
