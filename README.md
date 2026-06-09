@@ -1,5 +1,9 @@
 # Blackjack
 
+## Overview
+
+This repository is home to our distributed blackjack application consisting of three nodes: the server, the dealer, and the player. It aims to allow users to play the casino game blackjack from their terminal over the network. While blackjack is often associated with gambling, there is no currency implemented in this application. In order to avoid limiting our users to digital points, we leave that ~issue~ to the players!
+
 ## Running
 
 ### General
@@ -327,7 +331,7 @@ Of course we also had to do Full System Tests:
 
 To check the user experience from the teminal, we also tested for:
 - Readable output tests — Player sees cards, totals, and results clearly.
-- Error message clarity tests — TIMEOUT and INVALID_ACTION
+- Error message clarity tests — TIMEOUT and INVALID ACTION
 
 For overall integrity and to keep track of the game, a debug mode was included that logs everything in case future problems arise.
 
