@@ -54,6 +54,10 @@ nix run .#player
 nix run .#dealer
 ```
 
+### Configuration
+
+Currently the addresses each node tries to access are hard coded, and can be found at the top of each class as `HOST`. Also of note is the `DEBUG` constant that enables printing of all incoming and outgoing messages to the screen.
+
 ## Message Reference
 
 Messages between nodes take the form of a newline separated plaintext strings.
