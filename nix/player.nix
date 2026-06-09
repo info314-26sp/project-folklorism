@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   stdenv,
   ...
@@ -11,13 +12,21 @@ let
       "java.base"
     ];
   };
+
+  fs = lib.fileset;
 in
 
 stdenv.mkDerivation {
   pname = "blackjack-player";
   version = "0.0.0";
 
-  src = ../player;
+  src = fs.toSource {
+    root = ../.;
+    fileset = fs.unions [
+      ../player/PlayerClient.java
+      ../common
+    ];
+  };
 
   nativeBuildInputs = [
     jdk
@@ -28,8 +37,11 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    javac --source-path . PlayerTest.java
-    jar cf player.jar PlayerTest.class
+    mv player/* .
+    mv common/* .
+
+    javac --source-path . PlayerClient.java
+    jar cf player.jar *.class **/*.class
 
     runHook postBuild
   '';
@@ -41,7 +53,7 @@ stdenv.mkDerivation {
   
     mkdir -p $out/bin
     makeWrapper ${jre}/bin/java $out/bin/blackjack-player \
-      --add-flags "-cp $out/share/blackjack/player.jar PlayerTest"
+      --add-flags "-cp $out/share/blackjack/player.jar PlayerClient"
 
     runHook postInstall
   '';

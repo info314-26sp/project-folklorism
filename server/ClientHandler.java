@@ -21,22 +21,22 @@ public class ClientHandler implements Runnable {
       this.out = out;
       this.in = in;
 
-      // dummy way of setting player / dealer
-      if (server.getDealer() == null) {
-        server.setDealer(this);
-        // out.println("dealer");
-      } else if (server.getPlayer() == null) {
-        server.setPlayer(this);
-        // out.println("player");
+      // assign client to dealer or player
+      if (!handleAssign()) {
+        clientSocket.close();
+        return;
       }
+
+      // wait for all clients to join to start game
+      handleGameStart();
 
       // separate logic handlers
       if (server.getDealer() == this) {
-        while (true) {
+        while (!server.isGameOver()) {
           handleDealer();
         }
       } else if (server.getPlayer() == this) {
-        while (true) {
+        while (!server.isGameOver()) {
           handlePlayer();
         }
       }
@@ -44,49 +44,124 @@ public class ClientHandler implements Runnable {
     }
   }
 
+  /**
+   * handles assigning the client as either a dealer or player
+   */
+  private boolean handleAssign() throws IOException {
+    String[] message = readMessage();
+    String type = message[0].split(" ")[0];
+    String action = message[0].split(" ")[1];
+
+    // abort if invalid message
+    if (!type.equals("REQ") || !action.equals("ASRO")) {
+    System.out.println("abort");
+      return false;
+    }
+
+    String role = message[1];
+    switch (role) {
+      case "player":
+        return server.assignPlayer(this);
+      case "dealer":
+        return server.assignDealer(this);
+      default:
+        sendMessage(
+          "RES ASRO\n" +
+          "failure\n" +
+          "Invalid role requested\n"
+        );
+        return false;
+    }
+  }
+
+  /**
+   * waits for all clients to join before sending a game start message
+   */
+  private void handleGameStart() throws IOException {
+    server.handleGameStart();
+
+    // send gamestart message
+    sendMessage(
+      "REQ GMST\n"
+    );
+  }
+
+  /**
+   * player game loop logic
+   */
   private void handlePlayer() throws IOException {
     String[] message = readMessage();
-    String type = message[1].split("\"")[3];
+    String type = message[0].split(" ")[0];
+    String action = message[0].split(" ")[1];
 
     // handle action
-    switch (type) {
-      case "PLAYER_ACTION":
-        String action = message[5].split("\"")[3];
-        server.handlePlayerAction(action);
+    switch (action) {
+      case "PLAC":
+        String body = message[1];
+        server.handlePlayerAction(body);
+        break;
+      case "DLHD":
+        server.handleDealerHand();
+        break;
+      case "DLFI":
+        server.gotFinalDealerHand();
+      case "GMFI":
         break;
       default:
     }
   }
 
+  /**
+   * dealer game loop logic
+   */
   private void handleDealer() throws IOException {
     String[] message = readMessage();
-    String type = message[1].split("\"")[3];
+    String type = message[0].split(" ")[0];
+    String action = message[0].split(" ")[1];
 
     // handle action
-    switch (type) {
-      case "DEALER_CARD":
-        String target = message[5].split("\"")[3];
-        String card = message[6].split("\"")[3];
-        server.handleDealerCard(target, card);
+    switch (action) {
+      case "DLCD":
+        String recipient = message[1];
+        String card = message[2];
+        server.handleDealerCard(recipient, card);
+        break;
+      case "DRCD":
+        sendMessage(
+          "REQ DLCD\n" +
+          "dealer\n"
+        );
+        break;
+      case "DLFI":
+        sendMessage("RES DLFI\n");
+        server.handleCompareScores();
         break;
       default:
     }
   }
 
+  /**
+   * read message from client
+   */
   private String[] readMessage() throws IOException {
     List<String> message = new ArrayList<String>();
     String line;
 
-    // stop reading at closing '}' line
-    while ((line = in.readLine()) != null && !line.equals("}")) {
+    if (GameServer.DEBUG) System.out.println("\ndebug (read):");
+    while ((line = in.readLine()) != null && !line.isEmpty()) {
+      if (GameServer.DEBUG) System.out.println(line);
       message.add(line);
     }
-    message.add("}");
+    if (GameServer.DEBUG) System.out.println();
 
     return message.toArray(new String[0]);
   }
 
+  /**
+   * send message to client
+   */
   public void sendMessage(String message) {
+    if (GameServer.DEBUG) System.out.println("\ndebug (send):\n" + message);
     out.println(message);
   }
 }

@@ -23,8 +23,8 @@ stdenv.mkDerivation {
   src = fs.toSource {
     root = ../.;
     fileset = fs.unions [
-      ../dealer
-      ../Card_And_Message_Stuff
+      ../dealer/DealerClient.java
+      ../common
     ];
   };
 
@@ -37,9 +37,10 @@ stdenv.mkDerivation {
   buildPhase = ''
     runHook preBuild
 
-    javac --source-path . dealer/DealerTest.java
-    mv dealer/DealerTest.class .
-    jar cf dealer.jar DealerTest.class Card_And_Message_Stuff/*.class
+    mv dealer/* .
+    mv common/* .
+    javac --source-path . DealerClient.java
+    jar cf dealer.jar DealerClient.class Deck/*.class
 
     runHook postBuild
   '';
@@ -51,7 +52,7 @@ stdenv.mkDerivation {
   
     mkdir -p $out/bin
     makeWrapper ${jre}/bin/java $out/bin/blackjack-dealer \
-      --add-flags "-cp $out/share/blackjack/dealer.jar DealerTest"
+      --add-flags "-cp $out/share/blackjack/dealer.jar DealerClient"
 
     runHook postInstall
   '';
