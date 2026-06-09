@@ -327,7 +327,7 @@ Of course we also had to do Full System Tests:
 
 To check the user experience from the teminal, we also tested for:
 - Readable output tests — Player sees cards, totals, and results clearly.
-- Error message clarity tests — TIMEOUT, INVALID_ACTION, DEALER_DISCONNECTED.
+- Error message clarity tests — TIMEOUT and INVALID_ACTION
 
 For overall integrity and to keep track of the game, a debug mode was included that logs everything in case future problems arise.
 
