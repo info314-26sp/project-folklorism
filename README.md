@@ -1,5 +1,55 @@
 # Blackjack
 
+## Running
+
+### General
+
+When starting the nodes, make sure that the server is started first, otherwise the clients will not be able to connect and will exit immediately.
+
+All nodes are written in java and should be able to be run by executing the main class for each:
+
+```sh
+java server/GameServer.java
+```
+```sh
+java player/PlayerClient.java
+```
+```sh
+java dealer/DealerClient.java
+```
+
+Shared packages, i.e. `Deck`, are found under the `common` directory, but are also symlinked into each node's directory to avoid the user having to worry about manually copying and compiling them.
+
+If for some reason you are unable to run the nodes like this, copy the `Deck` directory into the same directory as the classes for each node:
+```
+.
+├── Deck
+│   ├── Card.java
+│   ├── Deck.java
+│   ├── Rank.java
+│   └── Suit.java
+├── DealerClient.java
+```
+
+If you are still unable to run, try compiling the files before running:
+```sh
+javac --source-path . DealerClient.java
+```
+
+### Nix
+
+On systems with nix installed, you can use the repo's flake to build and run each node. The following commands will run each node respectively:
+
+```sh
+nix run .#server
+```
+```sh
+nix run .#player
+```
+```sh
+nix run .#dealer
+```
+
 ## Message Reference
 
 Messages between nodes take the form of a newline separated plaintext strings.

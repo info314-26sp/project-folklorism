@@ -3,7 +3,7 @@ import java.net.Socket;
 import java.util.*;
 import Deck.*;
 
-class PlayerTest {
+class PlayerClient {
   public static final boolean DEBUG = false;
   private static final String HOST = "localhost";
   private static final int PORT = 2121;
@@ -15,7 +15,7 @@ class PlayerTest {
   private BufferedReader in;
   private BufferedReader stdIn;
 
-  public PlayerTest() {
+  public PlayerClient() {
     try (
       Socket socket = new Socket(HOST, PORT);
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -259,6 +259,6 @@ class PlayerTest {
   }
 
   public static void main(String[] args) {
-    new PlayerTest();
+    new PlayerClient();
   }
 }

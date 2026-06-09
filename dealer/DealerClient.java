@@ -3,7 +3,7 @@ import java.util.*;
 import java.net.Socket;
 import Deck.*;
 
-class DealerTest {
+class DealerClient {
   private static final String HOST = "localhost";
   private static final int PORT = 2121;
   public static final boolean DEBUG = false;
@@ -13,7 +13,7 @@ class DealerTest {
   private Deck deck = new Deck();
   private int score = 0;
 
-  public DealerTest() {
+  public DealerClient() {
     try (
       Socket socket = new Socket(HOST, PORT);
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -204,6 +204,6 @@ class DealerTest {
   }
 
   public static void main(String[] args) {
-    new DealerTest();
+    new DealerClient();
   }
 }

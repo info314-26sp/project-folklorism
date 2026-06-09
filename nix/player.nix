@@ -23,7 +23,7 @@ stdenv.mkDerivation {
   src = fs.toSource {
     root = ../.;
     fileset = fs.unions [
-      ../player
+      ../player/PlayerClient.java
       ../common
     ];
   };
@@ -40,7 +40,7 @@ stdenv.mkDerivation {
     mv player/* .
     mv common/* .
 
-    javac --source-path . PlayerTest.java
+    javac --source-path . PlayerClient.java
     jar cf player.jar *.class **/*.class
 
     runHook postBuild
@@ -53,7 +53,7 @@ stdenv.mkDerivation {
   
     mkdir -p $out/bin
     makeWrapper ${jre}/bin/java $out/bin/blackjack-player \
-      --add-flags "-cp $out/share/blackjack/player.jar PlayerTest"
+      --add-flags "-cp $out/share/blackjack/player.jar PlayerClient"
 
     runHook postInstall
   '';

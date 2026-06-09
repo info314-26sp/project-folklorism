@@ -23,7 +23,9 @@ stdenv.mkDerivation {
   src = fs.toSource {
     root = ../.;
     fileset = fs.unions [
-      ../server
+      ../server/GameServer.java
+      ../server/Game.java
+      ../server/ClientHandler.java
       ../common
     ];
   };
