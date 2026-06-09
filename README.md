@@ -4,6 +4,12 @@
 
 This repository is home to our distributed blackjack application consisting of three nodes: the server, the dealer, and the player. It aims to allow users to play the casino game blackjack from their terminal over the network. While blackjack is often associated with gambling, there is no currency implemented in this application. In order to avoid limiting our users to digital points, we leave that ~issue~ to the players!
 
+### Architecture
+
+The following diagram shows how the nodes interact with eachother using messages in a standard game loop.
+
+![architecture diagram](assets/architecture.png)
+
 ## Running
 
 ### General
