@@ -28,7 +28,7 @@ If for some reason you are unable to run the nodes like this, copy the `Deck` di
 │   ├── Deck.java
 │   ├── Rank.java
 │   └── Suit.java
-├── DealerClient.java
+└── DealerClient.java
 ```
 
 If you are still unable to run, try compiling the files before running:
